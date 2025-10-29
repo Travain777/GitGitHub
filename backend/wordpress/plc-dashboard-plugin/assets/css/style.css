@@ -1,0 +1,439 @@
+/**
+ * PLC Dashboard WordPress Plugin - Styles
+ */
+
+/* Variáveis CSS */
+.plc-dashboard-wrapper {
+    --plc-primary: #2563eb;
+    --plc-secondary: #64748b;
+    --plc-success: #10b981;
+    --plc-danger: #ef4444;
+    --plc-warning: #f59e0b;
+    --plc-bg-dark: #1e293b;
+    --plc-bg-light: #f1f5f9;
+    --plc-border: #cbd5e1;
+}
+
+/* Container Principal */
+.plc-dashboard-wrapper {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    max-width: 1400px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Header */
+.plc-dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: var(--plc-bg-dark);
+    color: white;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.plc-dashboard-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--plc-danger);
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.connected {
+    background: var(--plc-success);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Painel de Controle */
+.plc-control-panel {
+    background: var(--plc-bg-light);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.control-group {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.control-group label {
+    font-weight: 600;
+    color: #333;
+}
+
+.control-group input[type="text"],
+.control-group input[type="number"] {
+    padding: 8px 12px;
+    border: 1px solid var(--plc-border);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* Estatísticas */
+.plc-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--plc-primary);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.stat-card h3 {
+    font-size: 0.9rem;
+    color: #666;
+    text-transform: uppercase;
+    margin: 0 0 10px 0;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+/* Gráficos */
+.plc-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.chart-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.chart-container h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.chart-container canvas {
+    max-height: 300px;
+}
+
+/* Dados do PLC */
+.plc-data-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.data-panel {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.data-panel h3 {
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--plc-border);
+    color: #333;
+}
+
+.register-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.register-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: var(--plc-bg-light);
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.register-item:hover {
+    background: #e2e8f0;
+}
+
+.register-name {
+    font-weight: 600;
+    color: var(--plc-primary);
+}
+
+.register-value {
+    font-family: 'Courier New', monospace;
+    color: var(--plc-success);
+}
+
+/* Análise IA */
+.plc-ai-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 2px solid #8b5cf6;
+    margin-bottom: 20px;
+}
+
+.plc-ai-section h3 {
+    margin: 0 0 15px 0;
+    color: #8b5cf6;
+}
+
+.ai-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.ai-controls select {
+    padding: 8px 12px;
+    border: 1px solid var(--plc-border);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.ai-output {
+    background: var(--plc-bg-light);
+    padding: 15px;
+    border-radius: 4px;
+    min-height: 150px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+}
+
+.ai-result {
+    margin-bottom: 10px;
+    padding: 10px;
+    background: white;
+    border-radius: 4px;
+    border-left: 3px solid #8b5cf6;
+}
+
+/* Log */
+.plc-log-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.plc-log-section h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.log-container {
+    background: var(--plc-bg-dark);
+    color: white;
+    padding: 15px;
+    border-radius: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+.log-entry {
+    margin-bottom: 8px;
+    padding: 4px;
+    border-left: 3px solid transparent;
+}
+
+.log-entry.info {
+    border-left-color: var(--plc-primary);
+}
+
+.log-entry.success {
+    border-left-color: var(--plc-success);
+    color: var(--plc-success);
+}
+
+.log-entry.error {
+    border-left-color: var(--plc-danger);
+    color: var(--plc-danger);
+}
+
+.log-entry.warning {
+    border-left-color: var(--plc-warning);
+    color: var(--plc-warning);
+}
+
+.placeholder {
+    color: #999;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Botões compatíveis com WordPress */
+.plc-dashboard-wrapper .button {
+    display: inline-block;
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 2.15384615;
+    min-height: 32px;
+    margin: 0;
+    padding: 0 12px;
+    cursor: pointer;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 3px;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.plc-dashboard-wrapper .button-primary {
+    background: var(--plc-primary);
+    border-color: var(--plc-primary);
+    color: #fff;
+}
+
+.plc-dashboard-wrapper .button-primary:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+.plc-dashboard-wrapper .button-secondary {
+    background: #f0f0f1;
+    border-color: #c3c4c7;
+    color: #2c3338;
+}
+
+.plc-dashboard-wrapper .button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.plc-dashboard-wrapper .button-small {
+    padding: 4px 8px;
+    font-size: 12px;
+    line-height: 2;
+    min-height: 26px;
+}
+
+/* Scrollbar */
+.register-list::-webkit-scrollbar,
+.log-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.register-list::-webkit-scrollbar-track,
+.log-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.register-list::-webkit-scrollbar-thumb,
+.log-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.register-list::-webkit-scrollbar-thumb:hover,
+.log-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .plc-dashboard-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .control-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .plc-charts-grid,
+    .plc-data-section {
+        grid-template-columns: 1fr;
+    }
+
+    .ai-controls {
+        flex-direction: column;
+    }
+}
+
+/* Status Widget (para shortcode [plc_status]) */
+.plc-status-widget {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    max-width: 400px;
+}
+
+.plc-status-widget h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.plc-status-widget .status-indicator {
+    margin-bottom: 10px;
+}
+
+.indicator-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--plc-danger);
+    margin-right: 8px;
+    animation: pulse 2s infinite;
+}
+
+.indicator-dot.connected {
+    background: var(--plc-success);
+}
+
+/* Chart Widget (para shortcode [plc_chart]) */
+.plc-chart-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
