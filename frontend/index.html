@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>PLC Mitsubishi Q06UDVCPU - Dashboard de Análise</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>PLC Mitsubishi Q06UDVCPU - Análise de Dados</h1>
+            <div class="connection-status">
+                <span class="status-indicator" id="statusIndicator"></span>
+                <span id="connectionStatus">Desconectado</span>
+            </div>
+        </header>
+
+        <!-- Controles de Conexão -->
+        <section class="control-panel">
+            <div class="config-group">
+                <label for="plcIp">IP do PLC:</label>
+                <input type="text" id="plcIp" placeholder="192.168.0.1" value="192.168.0.1">
+
+                <label for="plcPort">Porta:</label>
+                <input type="number" id="plcPort" placeholder="5000" value="5000">
+
+                <button id="connectBtn" class="btn btn-primary">Conectar</button>
+                <button id="disconnectBtn" class="btn btn-secondary" disabled>Desconectar</button>
+            </div>
+        </section>
+
+        <!-- Dashboard Principal -->
+        <section class="dashboard">
+            <!-- Estatísticas Rápidas -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Dispositivos Lidos</h3>
+                    <p class="stat-value" id="deviceCount">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Taxa de Atualização</h3>
+                    <p class="stat-value" id="updateRate">0 ms</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Anomalias Detectadas</h3>
+                    <p class="stat-value" id="anomalyCount">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Status IA</h3>
+                    <p class="stat-value" id="aiStatus">Inativo</p>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>Dados em Tempo Real (D Registers)</h3>
+                    <canvas id="realtimeChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Análise de Tendência</h3>
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Dados do PLC -->
+            <div class="data-section">
+                <div class="data-panel">
+                    <h3>Registros D (Data Registers)</h3>
+                    <div class="register-list" id="dRegisterList">
+                        <p class="placeholder">Conecte ao PLC para ver os dados...</p>
+                    </div>
+                </div>
+                <div class="data-panel">
+                    <h3>Bits M (Memory Bits)</h3>
+                    <div class="register-list" id="mBitList">
+                        <p class="placeholder">Conecte ao PLC para ver os dados...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Análise IA com Transformers.js -->
+            <div class="ai-section">
+                <h3>Análise Inteligente (Transformers.js)</h3>
+                <div class="ai-controls">
+                    <button id="startAiBtn" class="btn btn-ai">Iniciar Análise IA</button>
+                    <button id="stopAiBtn" class="btn btn-secondary" disabled>Parar Análise</button>
+                    <select id="aiModel">
+                        <option value="anomaly">Detecção de Anomalias</option>
+                        <option value="prediction">Previsão de Tendências</option>
+                        <option value="classification">Classificação de Estados</option>
+                    </select>
+                </div>
+                <div class="ai-output" id="aiOutput">
+                    <p class="placeholder">Inicie a análise IA para ver os resultados...</p>
+                </div>
+            </div>
+
+            <!-- Log de Eventos -->
+            <div class="log-section">
+                <h3>Log de Eventos</h3>
+                <div class="log-container" id="logContainer">
+                    <p class="log-entry">Sistema inicializado...</p>
+                </div>
+                <button id="clearLogBtn" class="btn btn-small">Limpar Log</button>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p>PLC Dashboard &copy; 2025 | Transformers.js v2.17.1 | Chart.js v4.4.0</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/plc-client.js"></script>
+    <script src="js/ai-analysis.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

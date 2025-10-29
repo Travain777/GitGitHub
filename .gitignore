@@ -1,1 +1,63 @@
 ignore.js
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Build files
+dist/
+build/
+
+# Cache
+.cache/
+*.cache
+
+# PHP
+vendor/
+composer.lock
+
+# Database
+*.db
+*.sqlite
+
+# Secrets
+*.key
+*.pem
+credentials.json
+secrets.json
