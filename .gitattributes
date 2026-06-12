@@ -1,0 +1,11 @@
+# Garante quebras de linha LF nos arquivos que rodam no Linux (GitHub Actions)
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
+gradlew text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.py text eol=lf
+# Arquivos binarios nao devem ser tocados
+*.xlsm binary
+*.apk binary

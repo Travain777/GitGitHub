@@ -1,0 +1,19 @@
+{
+  "name": "leitor-qr-producao",
+  "version": "1.0.0",
+  "description": "App de celular que le QR de producao, mostra os dados e envia para a planilha via AndroCode (TCP).",
+  "private": true,
+  "scripts": {
+    "sync": "cap sync android",
+    "add:android": "cap add android",
+    "build:apk": "cd android && gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "capacitor-tcp-socket": "^7.1.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  }
+}

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Leitor QR - Produção</title>
+  <style>
+    :root {
+      --verde: #1f9d55;
+      --vermelho: #d64545;
+      --amarelo: #d9a400;
+      --azul: #2b6cb0;
+      --fundo: #11161c;
+      --cartao: #1c242e;
+      --texto: #eef2f6;
+      --suave: #8a99a8;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--fundo); color: var(--texto);
+      display: flex; flex-direction: column; min-height: 100vh;
+    }
+    header {
+      background: var(--cartao); padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #000;
+    }
+    header h1 { font-size: 17px; margin: 0; }
+    header .estado { font-size: 12px; color: var(--suave); }
+    .conteudo { flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+
+    #leitor { width: 100%; border-radius: 14px; overflow: hidden; background: #000; }
+
+    .cartao {
+      background: var(--cartao); border-radius: 14px; padding: 16px;
+      border-left: 6px solid var(--suave);
+    }
+    .cartao.ok { border-left-color: var(--verde); }
+    .cartao.erro { border-left-color: var(--vermelho); }
+    .cartao.aguardando { border-left-color: var(--suave); }
+
+    .linha { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #2a333e; }
+    .linha:last-child { border-bottom: none; }
+    .rotulo { color: var(--suave); font-size: 13px; }
+    .valor { font-size: 17px; font-weight: 600; text-align: right; }
+    .valor.grande { font-size: 22px; }
+
+    .bruto { font-family: monospace; font-size: 13px; color: var(--suave); word-break: break-all; margin-top: 6px; }
+
+    button {
+      border: none; border-radius: 12px; padding: 16px; font-size: 17px; font-weight: 700;
+      color: #fff; width: 100%; cursor: pointer;
+    }
+    button:disabled { opacity: .4; }
+    .btn-enviar { background: var(--verde); }
+    .btn-config { background: var(--azul); }
+
+    .historico { display: flex; flex-direction: column; gap: 6px; }
+    .historico h2 { font-size: 14px; color: var(--suave); margin: 4px 0; }
+    .hist-item {
+      background: var(--cartao); border-radius: 8px; padding: 8px 12px; font-size: 13px;
+      display: flex; justify-content: space-between;
+    }
+    .hist-item .env-ok { color: var(--verde); }
+    .hist-item .env-no { color: var(--amarelo); }
+
+    dialog {
+      background: var(--cartao); color: var(--texto); border: none; border-radius: 14px;
+      padding: 20px; width: 90%; max-width: 360px;
+    }
+    dialog input {
+      width: 100%; padding: 12px; margin: 6px 0 14px; border-radius: 8px;
+      border: 1px solid #3a4754; background: #0e1318; color: var(--texto); font-size: 16px;
+    }
+    dialog label { font-size: 13px; color: var(--suave); }
+    .aviso { background: #3a2a00; color: #ffd66b; padding: 10px 12px; border-radius: 8px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Leitor QR · Produção</h1>
+    <span class="estado" id="estadoConexao">PC: não configurado</span>
+  </header>
+
+  <div class="conteudo">
+    <div id="leitor"></div>
+
+    <div class="cartao aguardando" id="cartaoResultado">
+      <div class="linha"><span class="rotulo">Status</span><span class="valor" id="vStatus">Aguardando leitura…</span></div>
+      <div class="linha"><span class="rotulo">Referência</span><span class="valor" id="vRef">—</span></div>
+      <div class="linha"><span class="rotulo">Tipo de produto</span><span class="valor" id="vTipo">—</span></div>
+      <div class="linha"><span class="rotulo">QTD / Caixa</span><span class="valor grande" id="vQtd">—</span></div>
+      <div class="linha"><span class="rotulo">Sequência</span><span class="valor" id="vSeq">—</span></div>
+      <div class="linha"><span class="rotulo">Lote</span><span class="valor" id="vLote">—</span></div>
+      <div class="bruto" id="vBruto"></div>
+    </div>
+
+    <button class="btn-enviar" id="btnEnviar" disabled>Enviar para planilha</button>
+    <button class="btn-config" id="btnConfig">⚙ Configurar PC (IP / Porta)</button>
+
+    <div class="historico">
+      <h2>Últimas leituras</h2>
+      <div id="listaHistorico"></div>
+    </div>
+  </div>
+
+  <dialog id="dlgConfig">
+    <h3 style="margin-top:0">Conexão com o PC</h3>
+    <label>IP do computador (ex.: 192.168.1.45)</label>
+    <input id="inpIP" inputmode="decimal" placeholder="192.168.1.45" />
+    <label>Porta (padrão do AndroCode: 5831)</label>
+    <input id="inpPorta" inputmode="numeric" value="5831" />
+    <label style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <input type="checkbox" id="inpAutoEnviar" style="width:auto;margin:0" />
+      Enviar automaticamente ao ler (sem apertar o botão)
+    </label>
+    <button class="btn-config" id="btnSalvarConfig">Salvar</button>
+  </dialog>
+
+  <script src="vendor/html5-qrcode.min.js"></script>
+  <script src="produtos.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

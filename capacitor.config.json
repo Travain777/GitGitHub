@@ -1,0 +1,12 @@
+{
+  "appId": "com.licavqb.leitorqr",
+  "appName": "Leitor QR",
+  "webDir": "app",
+  "android": {
+    "allowMixedContent": true
+  },
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
+}
