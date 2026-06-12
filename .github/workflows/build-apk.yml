@@ -3,7 +3,7 @@ name: Gerar APK
 # Roda ao enviar codigo (push) ou manualmente pelo botao "Run workflow"
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, leitor-qr-producao ]
   workflow_dispatch:
 
 jobs:
