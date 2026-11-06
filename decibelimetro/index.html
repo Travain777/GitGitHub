@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<title>Decibelímetro do Condomínio</title>
+<style>
+:root{--bg:#0b0f14;--card:#141b24;--line:#223041;--txt:#e6edf3;--mut:#8b9bb0;--ok:#2ecc71;--warn:#f1c40f;--bad:#e74c3c;--acc:#3fa9f5}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{padding:calc(env(safe-area-inset-top) + 4px) 12px calc(env(safe-area-inset-bottom) + 20px);max-width:640px;margin:0 auto}
+h1{font-size:18px;margin:10px 0 4px;font-weight:600}
+h2{font-size:15px;margin:0 0 8px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0}
+.meter{text-align:center}
+#db{font-size:88px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;transition:color .2s}
+#db small{font-size:26px;color:var(--mut);margin-left:4px;font-weight:500}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.row>*{flex:1 1 0;min-width:120px}
+button{background:#1e2a38;color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:13px 10px;font-size:15px;font-weight:600;font-family:inherit}
+button.pri{background:var(--acc);border-color:var(--acc);color:#04121f}
+button.stop{background:#5a2525;border-color:#7a3030;color:#fff}
+button.danger{background:#2a1515;border-color:#5a2525;color:#ffb3aa}
+button.sm{padding:8px 10px;font-size:13px;min-width:0}
+button:disabled{opacity:.4}
+.stat{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--mut);margin-top:8px;flex-wrap:wrap}
+.bar{height:12px;border-radius:6px;background:#0e141b;margin-top:12px;position:relative}
+#barFill{height:100%;width:0;border-radius:6px;background:var(--ok)}
+#barLim{position:absolute;top:-3px;bottom:-3px;width:3px;background:#fff;border-radius:2px}
+canvas{width:100%;display:block;border-radius:8px;background:#0e141b}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+input[type=number],input[type=time]{width:100%;background:#0e141b;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:16px;font-family:inherit}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.ev{border-top:1px solid var(--line);padding:12px 0}
+.ev:first-child{border-top:0;padding-top:0}
+.ev .h{display:flex;justify-content:space-between;gap:8px;font-weight:600}
+.ev .h b{color:#ff8a7a}
+.ev .d{font-size:13px;color:var(--mut);margin:4px 0 8px}
+.ev audio{width:100%;margin-top:8px;height:40px}
+.badge{display:inline-block;padding:4px 9px;border-radius:20px;font-size:12px;background:#0e141b;border:1px solid var(--line);margin:2px}
+.badge.ok{border-color:#1f6b40;color:#7fe0a8}
+.badge.bad{border-color:#7a3030;color:#ffb3aa}
+.badge.rec{border-color:#e74c3c;color:#fff;background:#7a1f1f;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.5}}
+#status{font-size:14px;color:var(--warn);margin-top:8px;min-height:0}
+#night{position:fixed;inset:0;background:#000;display:none;z-index:50;align-items:center;justify-content:center;flex-direction:column;color:#2c2c2c;user-select:none;-webkit-user-select:none;text-align:center;padding:20px}
+#night.on{display:flex}
+#night.alert{animation:pulse 1.2s infinite;color:#fff}
+@keyframes pulse{0%,100%{background:#2a0000}50%{background:#8a0000}}
+#nDb{font-size:72px;font-weight:700;font-variant-numeric:tabular-nums}
+#nInfo{font-size:16px;margin-top:10px;line-height:1.5}
+#nHint{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 18px);font-size:12px;color:#222}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;z-index:60;align-items:center;justify-content:center;padding:16px}
+.modal.on{display:flex}
+.modal .card{max-width:440px;width:100%;max-height:92vh;overflow:auto}
+.muted{color:var(--mut);font-size:13px;line-height:1.45}
+ol.muted{padding-left:18px;margin:6px 0}
+#calBig{font-size:40px;font-weight:700;text-align:center;margin:12px 0;font-variant-numeric:tabular-nums}
+details summary{font-weight:600;cursor:pointer;padding:2px 0;font-size:15px}
+.chk{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;color:var(--txt)}
+.chk input{width:20px;height:20px}
+</style>
+</head>
+<body>
+
+<h1>🔊 Decibelímetro do Condomínio</h1>
+
+<div class="card meter">
+  <div id="db">--<small>dB</small></div>
+  <div class="bar"><div id="barFill"></div><div id="barLim"></div></div>
+  <div class="stat"><span>Limite agora: <b id="limNow">--</b></span><span>Pico: <b id="peak">--</b></span><span>Média 1 min: <b id="avg1">--</b></span></div>
+  <div style="margin-top:10px" id="badges"></div>
+  <div id="status"></div>
+  <div class="row">
+    <button id="btnStart" class="pri">▶ Iniciar</button>
+    <button id="btnCal">🎙 Calibrar com minha voz</button>
+  </div>
+  <div class="row">
+    <button id="btnNight" disabled>🌙 Modo noite (tela escura)</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Últimos 2 minutos</h2>
+  <canvas id="cvLive" style="height:150px"></canvas>
+</div>
+
+<div class="card">
+  <h2>Linha do tempo da noite</h2>
+  <canvas id="cvAll" style="height:170px"></canvas>
+  <div class="muted" style="margin-top:6px">Faixas vermelhas = momentos gravados. Linha amarela = limite permitido.</div>
+</div>
+
+<div class="card">
+  <h2>Ocorrências gravadas (<span id="evCount">0</span>)</h2>
+  <div id="evList"><div class="muted">Nenhuma ocorrência ainda.</div></div>
+</div>
+
+<div class="card">
+  <h2>Enviar pelo celular</h2>
+  <div class="muted">O relatório é um único arquivo: quem receber abre no celular e vê o gráfico e escuta cada som.</div>
+  <div class="row">
+    <button id="btnReport" class="pri">📤 Relatório completo (gráfico + sons)</button>
+  </div>
+  <div class="row">
+    <button id="btnPng">🖼 Só o gráfico (imagem)</button>
+    <button id="btnWavs">🎧 Só os áudios</button>
+  </div>
+  <div class="row">
+    <button id="btnClear" class="danger">🗑 Nova noite (apagar tudo)</button>
+  </div>
+</div>
+
+<div class="card">
+  <details>
+    <summary>⚙ Configurações</summary>
+    <div class="grid2">
+      <div><label>Limite de dia (dB)</label><input type="number" id="limDia" step="1"></div>
+      <div><label>Limite à noite (dB)</label><input type="number" id="limNoite" step="1"></div>
+      <div><label>Noite começa</label><input type="time" id="noiteIni"></div>
+      <div><label>Noite termina</label><input type="time" id="noiteFim"></div>
+      <div><label>Tempo acima p/ disparar (s)</label><input type="number" id="minAcima" step="0.5" min="0"></div>
+      <div><label>Continua gravando após (s)</label><input type="number" id="posRoll" step="1" min="2"></div>
+      <div><label>Grava antes do disparo (s)</label><input type="number" id="preRoll" step="1" min="0" max="15"></div>
+      <div><label>Duração máx. por gravação (s)</label><input type="number" id="maxDur" step="10" min="10"></div>
+    </div>
+    <label>Ajuste fino da calibração: <b id="offTxt"></b></label>
+    <div class="row" style="margin-top:0">
+      <button class="sm" id="offMinus">− 1 dB</button>
+      <button class="sm" id="offPlus">+ 1 dB</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="vibrar"> Vibrar quando disparar (Android)</label>
+    <p class="muted">Os valores iniciais são só ponto de partida — ajuste conforme o regimento interno do seu condomínio.</p>
+  </details>
+</div>
+
+<p class="muted">Medição com microfone de celular, calibrada pela sua voz: os valores são aproximados e servem como registro. Não substitui medição com equipamento certificado (ABNT NBR 10151). Deixe o celular no carregador durante a noite.</p>
+
+<!-- Modo noite -->
+<div id="night">
+  <div id="nDb">--</div>
+  <div id="nInfo">Monitorando…</div>
+  <div id="nHint">toque 2 vezes para sair</div>
+</div>
+
+<!-- Calibração -->
+<div class="modal" id="calModal">
+  <div class="card">
+    <h2>🎙 Calibrar com sua voz</h2>
+    <ol class="muted">
+      <li>Deixe o celular parado onde ele vai ficar à noite.</li>
+      <li>Fique a <b>1 metro</b> dele.</li>
+      <li>Toque em <b>Gravar voz</b> e fale com <b>voz normal de conversa</b> por 6 segundos (ex.: conte de 1 a 20).</li>
+    </ol>
+    <label>Sua voz normal a 1 metro vale (dB)</label>
+    <input type="number" id="calRef" step="1">
+    <div class="muted" style="margin-top:4px">Padrão 60 dB (conversa normal). Se o aparelho ficar sensível demais, aumente a tolerância subindo o limite, não este valor.</div>
+    <div id="calBig">—</div>
+    <div class="muted" id="calMsg" style="text-align:center;min-height:20px"></div>
+    <div class="row">
+      <button id="calGo" class="pri">● Gravar voz</button>
+      <button id="calClose">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+
+/* ---------- Configuração ---------- */
+const DEF = {offset:95, ref:60, limDia:55, limNoite:50, noiteIni:'22:00', noiteFim:'07:00',
+             minAcima:1.5, posRoll:8, preRoll:5, maxDur:180, vibrar:false, calibrado:false};
+let cfg = Object.assign({}, DEF, lsGet('cfg'));
+function lsGet(k){try{return JSON.parse(localStorage.getItem('dbm_'+k))||{}}catch(e){return {}}}
+function lsSet(k,v){try{localStorage.setItem('dbm_'+k,JSON.stringify(v))}catch(e){}}
+function saveCfg(){lsSet('cfg',cfg)}
+
+const toMin = s => {const [h,m]=(s||'0:0').split(':').map(Number); return h*60+(m||0)};
+function isNight(t){
+  const d=new Date(t), m=d.getHours()*60+d.getMinutes(), a=toMin(cfg.noiteIni), b=toMin(cfg.noiteFim);
+  return a>b ? (m>=a||m<b) : (m>=a&&m<b);
+}
+const limAt = t => isNight(t) ? +cfg.limNoite : +cfg.limDia;
+
+/* ---------- Estado ---------- */
+let ctx=null, stream=null, src=null, proc=null, sink=null, running=false;
+let OUT_SR=16000;
+let pSmooth=1e-10;              // potência suavizada (ponderação lenta, 1 s)
+let live=[];                     // [t, dB] últimos 2 min
+let timeline=[];                 // [t, Leq1s, Max1s]
+let secAcc={p:0,dt:0,max:-999,t0:0};
+let ring=[], ringLen=0;          // pré-gravação
+let rec=null, aboveT=0, belowT=0;
+let events=[];
+let sessPeak=null;
+let calib=null;
+let curL=null, lastAudio=0;
+let wl=null;
+const urls=new Map();
+
+/* ---------- IndexedDB (não perder dados se a página recarregar) ---------- */
+let idb=null;
+function openDB(){return new Promise(res=>{try{
+  const r=indexedDB.open('decibelimetro',1);
+  r.onupgradeneeded=()=>{const d=r.result; d.createObjectStore('events',{keyPath:'id'}); d.createObjectStore('kv');};
+  r.onsuccess=()=>{idb=r.result;res()}; r.onerror=()=>res();
+}catch(e){res()}})}
+function dbOp(store,mode,fn){
+  if(!idb) return Promise.resolve();
+  return new Promise(res=>{try{
+    const t=idb.transaction(store,mode), r=fn(t.objectStore(store));
+    t.oncomplete=()=>res(r?r.result:undefined); t.onerror=()=>res(); t.onabort=()=>res();
+  }catch(e){res()}});
+}
+const saveTimeline = () => dbOp('kv','readwrite',s=>s.put(timeline,'timeline'));
+
+/* ---------- Áudio ---------- */
+async function start(){
+  setStatus('');
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    setStatus('Este navegador não liberou o microfone. Abra a página por um endereço https:// (veja as instruções).'); return false;
+  }
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1}});
+  }catch(e){ setStatus('Sem acesso ao microfone ('+e.name+'). Permita o microfone para esta página.'); return false; }
+  ctx=new (window.AudioContext||window.webkitAudioContext)();
+  try{await ctx.resume()}catch(e){}
+  OUT_SR=Math.min(16000,ctx.sampleRate);
+  src=ctx.createMediaStreamSource(stream);
+  proc=ctx.createScriptProcessor(4096,1,1);
+  sink=ctx.createGain(); sink.gain.value=0;
+  proc.onaudioprocess=onAudio;
+  src.connect(proc); proc.connect(sink); sink.connect(ctx.destination);
+  running=true; pSmooth=1e-10; secAcc={p:0,dt:0,max:-999,t0:Date.now()}; ring=[]; ringLen=0; lastAudio=Date.now();
+  await keepAwake();
+  $('btnStart').textContent='■ Parar'; $('btnStart').className='stop';
+  $('btnNight').disabled=false;
+  return true;
+}
+function stop(){
+  if(rec) finishEvent(Date.now());
+  running=false;
+  try{proc.disconnect();src.disconnect();sink.disconnect()}catch(e){}
+  try{stream.getTracks().forEach(t=>t.stop())}catch(e){}
+  try{ctx.close()}catch(e){}
+  try{wl&&wl.release()}catch(e){} wl=null;
+  saveTimeline();
+  curL=null;
+  $('btnStart').textContent='▶ Iniciar'; $('btnStart').className='pri';
+  $('btnNight').disabled=true; nightOff();
+}
+
+function downsample(x,sr){
+  const r=sr/OUT_SR, n=Math.floor(x.length/r), out=new Int16Array(n);
+  for(let i=0;i<n;i++){
+    const a=Math.floor(i*r), b=Math.max(a+1,Math.min(x.length,Math.floor((i+1)*r)));
+    let s=0; for(let j=a;j<b;j++) s+=x[j];
+    let v=s/(b-a); v=v<-1?-1:v>1?1:v;
+    out[i]=v<0?v*32768:v*32767;
+  }
+  return out;
+}
+
+function onAudio(e){
+  if(!running) return;
+  const x=e.inputBuffer.getChannelData(0), sr=ctx.sampleRate, dt=x.length/sr, now=Date.now();
+  let s=0; for(let i=0;i<x.length;i++) s+=x[i]*x[i];
+  const p=s/x.length+1e-12;
+  const dbfsInst=Math.max(-100,10*Math.log10(p));
+  pSmooth+= (1-Math.exp(-dt/1.0))*(p-pSmooth);
+  const L=Math.max(-100,10*Math.log10(pSmooth+1e-12))+ +cfg.offset;
+  const Linst=dbfsInst+ +cfg.offset;
+  curL=L;
+
+  if(calib) calib.vals.push(dbfsInst);
+
+  // lacuna (tela apagou / app em segundo plano)
+  if(now-lastAudio>4000) setStatus('⚠ O monitoramento ficou pausado por '+Math.round((now-lastAudio)/1000)+' s (a tela apagou ou saiu do app).');
+  lastAudio=now;
+
+  // gráfico ao vivo
+  live.push([now,L]); while(live.length&&live[0][0]<now-120000) live.shift();
+  if(sessPeak===null||Linst>sessPeak) sessPeak=Linst;
+
+  // linha do tempo 1 s
+  secAcc.p+=p*dt; secAcc.dt+=dt; if(Linst>secAcc.max) secAcc.max=Linst;
+  if(now-secAcc.t0>=1000){
+    timeline.push([secAcc.t0, r1(10*Math.log10(secAcc.p/secAcc.dt)+ +cfg.offset), r1(secAcc.max)]);
+    secAcc={p:0,dt:0,max:-999,t0:now};
+    if(timeline.length%30===0) saveTimeline();
+  }
+
+  // áudio
+  const pcm=downsample(x,sr);
+  if(rec){ rec.chunks.push(pcm); rec.len+=pcm.length; }
+  ring.push(pcm); ringLen+=pcm.length;
+  while(ring.length>1 && ringLen-ring[0].length>=cfg.preRoll*OUT_SR) ringLen-=ring.shift().length;
+
+  // disparo
+  const lim=limAt(now);
+  if(!rec){
+    aboveT = L>lim ? aboveT+dt : 0;
+    if(aboveT>=+cfg.minAcima) startEvent(now,lim);
+  }else{
+    if(now-rec.lastLv>=250){ rec.levels.push([now,r1(L)]); rec.lastLv=now; }
+    if(Linst>rec.peak) rec.peak=Linst;
+    rec.pSum+=p*dt; rec.tSum+=dt;
+    belowT = L>lim ? 0 : belowT+dt;
+    if(belowT>=+cfg.posRoll || (now-rec.start)/1000>=+cfg.maxDur) finishEvent(now);
+  }
+}
+const r1=v=>Math.round(v*10)/10;
+
+function startEvent(now,lim){
+  const pre=ringLen/OUT_SR*1000;
+  rec={start:now-pre, trig:now, lim, night:isNight(now), chunks:ring.slice(), len:ringLen,
+       levels: live.filter(q=>q[0]>=now-pre).map(q=>[q[0],r1(q[1])]), lastLv:now,
+       peak:-999, pSum:0, tSum:0};
+  belowT=0;
+  nightAlert(true);
+  if(cfg.vibrar&&navigator.vibrate) try{navigator.vibrate([300,150,300])}catch(e){}
+}
+function finishEvent(now){
+  const r=rec; rec=null; aboveT=0; belowT=0;
+  const pcm=new Int16Array(r.len); let o=0; for(const c of r.chunks){pcm.set(c,o);o+=c.length}
+  const ev={id:Math.round(r.start), start:Math.round(r.start), end:now, lim:r.lim, night:r.night,
+            peak:r1(r.peak), leq:r1(10*Math.log10(r.pSum/(r.tSum||1))+ +cfg.offset),
+            levels:r.levels, sr:OUT_SR, wav:wavBlob(pcm,OUT_SR)};
+  events.push(ev);
+  dbOp('events','readwrite',s=>s.put(ev));
+  renderEvents(); nightAlert(false);
+}
+function wavBlob(int16,sr){
+  const buf=new ArrayBuffer(44+int16.length*2), v=new DataView(buf);
+  const w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+  w(0,'RIFF');v.setUint32(4,36+int16.length*2,true);w(8,'WAVE');w(12,'fmt ');
+  v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);
+  v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,int16.length*2,true);
+  for(let i=0;i<int16.length;i++) v.setInt16(44+i*2,int16[i],true);
+  return new Blob([buf],{type:'audio/wav'});
+}
+
+/* ---------- Manter tela ligada ---------- */
+async function keepAwake(){
+  if(!('wakeLock' in navigator)){ updBadges(); return; }
+  try{ wl=await navigator.wakeLock.request('screen'); wl.addEventListener('release',()=>{wl=null;updBadges()}); }catch(e){ wl=null; }
+  updBadges();
+}
+document.addEventListener('visibilitychange',()=>{
+  if(!running) return;
+  if(document.visibilityState==='visible'){ keepAwake(); if(ctx&&ctx.state!=='running') ctx.resume().catch(()=>{}); }
+  else saveTimeline();
+});
+
+/* ---------- Calibração ---------- */
+$('btnCal').onclick=()=>{ $('calRef').value=cfg.ref; $('calBig').textContent=cfg.calibrado?'Calibrado ✓':'—'; $('calMsg').textContent=''; $('calModal').classList.add('on'); };
+$('calClose').onclick=()=>{ calib=null; $('calModal').classList.remove('on'); };
+$('calGo').onclick=async()=>{
+  if(!running){ const ok=await start(); if(!ok){ $('calMsg').textContent='Não consegui abrir o microfone.'; return; } }
+  const ref=parseFloat($('calRef').value)||60;
+  calib={vals:[]}; $('calGo').disabled=true;
+  const t0=Date.now(), D=6000;
+  const tick=()=>{
+    const left=D-(Date.now()-t0);
+    if(left>0){ $('calBig').textContent='Fale… '+Math.ceil(left/1000); $('calMsg').textContent='Voz normal, a 1 metro'; requestAnimationFrame(tick); return; }
+    const vals=calib.vals.slice().sort((a,b)=>b-a); calib=null; $('calGo').disabled=false;
+    const top=vals.slice(0,Math.max(1,Math.floor(vals.length/2)));   // só os trechos com voz (ignora pausas)
+    const pw=top.reduce((a,v)=>a+Math.pow(10,v/10),0)/top.length, voice=10*Math.log10(pw);
+    if(!isFinite(voice)||voice<-85){ $('calBig').textContent='—'; $('calMsg').textContent='Não ouvi sua voz. Chegue mais perto e tente de novo.'; return; }
+    cfg.ref=ref; cfg.offset=r1(ref-voice); cfg.calibrado=true; saveCfg(); fillCfg();
+    $('calBig').textContent='Calibrado ✓';
+    $('calMsg').textContent='Sua voz agora vale '+ref+' dB. Fique em silêncio e veja o valor do ambiente.';
+    updBadges();
+  };
+  tick();
+};
+
+/* ---------- Modo noite ---------- */
+let lastTap=0;
+$('btnNight').onclick=()=>{ $('night').classList.add('on'); try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen().catch(()=>{})}catch(e){} };
+$('night').addEventListener('click',()=>{ const n=Date.now(); if(n-lastTap<450) nightOff(); lastTap=n; });
+function nightOff(){ $('night').classList.remove('on'); try{document.fullscreenElement&&document.exitFullscreen()}catch(e){} }
+function nightAlert(on){ $('night').classList.toggle('alert',on); }
+
+/* ---------- Interface ---------- */
+$('btnStart').onclick=()=>{ running?stop():start(); };
+function setStatus(t){ $('status').textContent=t; }
+function updBadges(){
+  let h='';
+  if(running){
+    h+= wl ? '<span class="badge ok">Tela: mantida ligada ✓</span>'
+           : '<span class="badge bad">Tela pode apagar ⚠</span>';
+  }
+  h+= cfg.calibrado ? '<span class="badge ok">Calibrado pela voz ✓</span>' : '<span class="badge bad">Não calibrado</span>';
+  if(rec) h+='<span class="badge rec">● GRAVANDO</span>';
+  $('badges').innerHTML=h;
+}
+
+let lastDraw=0, lastAll=0;
+function loop(t){
+  requestAnimationFrame(loop);
+  if(t-lastDraw<100) return; lastDraw=t;
+  const now=Date.now(), lim=limAt(now);
+  $('limNow').textContent=lim+' dB ('+(isNight(now)?'noite':'dia')+')';
+  if(curL!==null&&running){
+    const L=curL, c= L>=lim?'var(--bad)': L>=lim-5?'var(--warn)':'var(--ok)';
+    $('db').innerHTML=Math.round(L)+'<small>dB</small>'; $('db').style.color=c;
+    $('barFill').style.width=Math.max(0,Math.min(100,(L-30)/70*100))+'%'; $('barFill').style.background=c;
+    $('peak').textContent=sessPeak!==null?Math.round(sessPeak)+' dB':'--';
+    const last=timeline.slice(-60); if(last.length){ const pw=last.reduce((a,q)=>a+Math.pow(10,q[1]/10),0)/last.length; $('avg1').textContent=Math.round(10*Math.log10(pw))+' dB'; }
+    $('nDb').textContent=Math.round(L)+' dB';
+    $('nInfo').innerHTML= rec ? 'SOM ACIMA DO LIMITE<br>GRAVANDO…' :
+      new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · limite '+lim+' dB<br>'+events.length+' ocorrência(s)';
+  }else{ $('db').innerHTML='--<small>dB</small>'; $('db').style.color=''; $('barFill').style.width='0'; }
+  $('barLim').style.left=Math.max(0,Math.min(100,(lim-30)/70*100))+'%';
+  updBadges();
+  drawLive();
+  if(t-lastAll>3000){ lastAll=t; drawAll(); }
+}
+
+/* ---------- Gráficos ---------- */
+function fmtT(t,sec=true){return new Date(t).toLocaleTimeString('pt-BR',sec?{hour:'2-digit',minute:'2-digit',second:'2-digit'}:{hour:'2-digit',minute:'2-digit'})}
+function fmtD(t){return new Date(t).toLocaleDateString('pt-BR')}
+function fitCanvas(cv){
+  const dpr=window.devicePixelRatio||1, W=cv.clientWidth||300, H=cv.clientHeight||150;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
+  const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); return [g,W,H];
+}
+function allEvSpans(){ const a=events.map(e=>({start:e.start,end:e.end})); if(rec) a.push({start:rec.start,end:Date.now()}); return a; }
+function drawLive(){
+  const [g,W,H]=fitCanvas($('cvLive')), now=Date.now();
+  paintChart(g,W,H,{t0:now-120000,t1:now,series:[{pts:live,color:'#3fa9f5',w:2}],evs:allEvSpans(),maxGap:2000});
+}
+function drawAll(){
+  const [g,W,H]=fitCanvas($('cvAll'));
+  if(!timeline.length){ g.fillStyle='#0e141b';g.fillRect(0,0,W,H); g.fillStyle='#6b7c90';g.font='13px system-ui';g.textAlign='center';g.fillText('Sem dados ainda',W/2,H/2); return; }
+  const t0=timeline[0][0], t1=Math.max(timeline[timeline.length-1][0], t0+60000);
+  paintChart(g,W,H,{t0,t1,evs:allEvSpans(),maxGap:6000,series:[
+    {pts:timeline.map(q=>[q[0],q[2]]),color:'rgba(63,169,245,.35)',w:1},
+    {pts:timeline.map(q=>[q[0],q[1]]),color:'#3fa9f5',w:1.5}]});
+}
+function paintChart(g,W,H,o){
+  const {t0,t1,series,evs=[],maxGap=3000,title}=o;
+  const L=34,R=8,T=title?26:8,B=22,yMin=30,yMax=100,pw=W-L-R,ph=H-T-B,span=(t1-t0)||1;
+  const X=t=>L+(t-t0)/span*pw, Y=v=>T+(1-(Math.min(yMax,Math.max(yMin,v))-yMin)/(yMax-yMin))*ph;
+  g.fillStyle='#0e141b'; g.fillRect(0,0,W,H);
+  if(title){ g.fillStyle='#e6edf3'; g.font='600 14px system-ui'; g.textAlign='left'; g.textBaseline='middle'; g.fillText(title,L,14); }
+  g.font='11px system-ui'; g.textBaseline='middle'; g.lineWidth=1;
+  for(let v=yMin;v<=yMax;v+=10){ const y=Y(v); g.strokeStyle='#1c2733'; g.beginPath(); g.moveTo(L,y); g.lineTo(W-R,y); g.stroke(); g.fillStyle='#6b7c90'; g.textAlign='right'; g.fillText(v,L-5,y); }
+  // marcações de tempo
+  const steps=[5e3,1e4,3e4,6e4,12e4,3e5,6e5,18e5,36e5,72e5,144e5], st=steps.find(s=>span/s<=5)||144e5;
+  const tz=new Date(t0).getTimezoneOffset()*6e4; g.textAlign='center';
+  for(let t=Math.ceil((t0-tz)/st)*st+tz;t<=t1;t+=st){ const x=X(t); g.strokeStyle='#1c2733'; g.beginPath(); g.moveTo(x,T); g.lineTo(x,T+ph); g.stroke(); g.fillStyle='#6b7c90'; g.fillText(fmtT(t,st<6e4),x,H-10); }
+  // ocorrências
+  g.fillStyle='rgba(231,76,60,.25)';
+  for(const e of evs){ const a=Math.max(L,X(e.start)), b=Math.min(W-R,X(e.end)); if(b>L&&a<W-R) g.fillRect(a,T,Math.max(2,b-a),ph); }
+  // limite
+  g.strokeStyle='#f1c40f'; g.setLineDash([5,4]); g.lineWidth=1.2; g.beginPath();
+  for(let x=L;x<=W-R;x+=2){ const y=Y(limAt(t0+(x-L)/pw*span)); x===L?g.moveTo(x,y):g.lineTo(x,y); }
+  g.stroke(); g.setLineDash([]);
+  // séries
+  for(const s of series){
+    let pts=s.pts.filter(q=>q[0]>=t0&&q[0]<=t1), gap=maxGap;
+    if(pts.length>pw*1.5){ const b=new Array(Math.ceil(pw)).fill(null);
+      for(const q of pts){ const i=Math.min(b.length-1,Math.floor((q[0]-t0)/span*pw)); if(!b[i]||q[1]>b[i][1]) b[i]=q; }
+      pts=b.filter(Boolean); gap=Math.max(maxGap,span/pw*3); }
+    g.strokeStyle=s.color; g.lineWidth=s.w; g.lineJoin='round'; g.beginPath();
+    let prev=null; for(const q of pts){ const x=X(q[0]),y=Y(q[1]); (!prev||q[0]-prev>gap)?g.moveTo(x,y):g.lineTo(x,y); prev=q[0]; }
+    g.stroke();
+  }
+}
+
+/* ---------- Lista de ocorrências ---------- */
+function urlFor(ev){ if(!urls.has(ev.id)) urls.set(ev.id,URL.createObjectURL(ev.wav)); return urls.get(ev.id); }
+function evName(ev){ const d=new Date(ev.start); const p=n=>String(n).padStart(2,'0'); return 'ruido_'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+'h'+p(d.getMinutes())+'m'+p(d.getSeconds())+'s.wav'; }
+function renderEvents(){
+  $('evCount').textContent=events.length;
+  const box=$('evList');
+  if(!events.length){ box.innerHTML='<div class="muted">Nenhuma ocorrência ainda.</div>'; return; }
+  box.innerHTML='';
+  events.slice().reverse().forEach((ev,k)=>{
+    const n=events.length-k, dur=Math.round((ev.end-ev.start)/1000);
+    const d=document.createElement('div'); d.className='ev';
+    d.innerHTML=`<div class="h"><span>#${n} · ${fmtT(ev.start)}</span><b>pico ${Math.round(ev.peak)} dB</b></div>
+      <div class="d">${fmtD(ev.start)} · ${dur} s · média ${Math.round(ev.leq)} dB · limite ${ev.lim} dB (${ev.night?'noite':'dia'})</div>
+      <canvas style="height:90px"></canvas>
+      <audio controls preload="metadata" src="${urlFor(ev)}"></audio>
+      <div class="row"><button class="sm" data-a="share">📤 Enviar este som</button><button class="sm danger" data-a="del">Apagar</button></div>`;
+    box.appendChild(d);
+    const [g,W,H]=fitCanvas(d.querySelector('canvas'));
+    paintChart(g,W,H,{t0:ev.start,t1:Math.max(ev.end,ev.start+5000),series:[{pts:ev.levels,color:'#ff8a7a',w:2}],maxGap:2000});
+    d.querySelector('[data-a=share]').onclick=()=>shareFiles([new File([ev.wav],evName(ev),{type:'audio/wav'})],'Som gravado '+fmtD(ev.start)+' '+fmtT(ev.start));
+    d.querySelector('[data-a=del]').onclick=()=>{ if(!confirm('Apagar esta gravação?')) return;
+      events=events.filter(e=>e.id!==ev.id); dbOp('events','readwrite',s=>s.delete(ev.id));
+      if(urls.has(ev.id)){URL.revokeObjectURL(urls.get(ev.id));urls.delete(ev.id)} renderEvents(); };
+  });
+}
+
+/* ---------- Envio ---------- */
+async function shareFiles(files,title){
+  try{
+    if(navigator.canShare&&navigator.share&&navigator.canShare({files})){ await navigator.share({files,title,text:title}); return; }
+  }catch(e){ if(e&&e.name==='AbortError') return; }
+  for(const f of files){ const u=URL.createObjectURL(f), a=document.createElement('a'); a.href=u; a.download=f.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),20000); }
+  setStatus('Arquivo(s) salvo(s) em Downloads — envie pelo WhatsApp como documento.');
+}
+const blobToDataURL=b=>new Promise(r=>{const f=new FileReader(); f.onload=()=>r(f.result); f.readAsDataURL(b);});
+function chartPNG(w,h,opts){ const c=document.createElement('canvas'); c.width=w*2; c.height=h*2; const g=c.getContext('2d'); g.scale(2,2); paintChart(g,w,h,opts); return c; }
+function nightOpts(title){
+  const t0=timeline[0][0], t1=Math.max(timeline[timeline.length-1][0],t0+60000);
+  return {t0,t1,title,evs:events,maxGap:6000,series:[
+    {pts:timeline.map(q=>[q[0],q[2]]),color:'rgba(63,169,245,.35)',w:1},
+    {pts:timeline.map(q=>[q[0],q[1]]),color:'#3fa9f5',w:1.5}]};
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function stamp(){ const d=new Date(), p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+
+$('btnReport').onclick=async()=>{
+  if(!timeline.length&&!events.length){ setStatus('Ainda não há dados para enviar.'); return; }
+  setStatus('Montando relatório…');
+  const t0=timeline.length?timeline[0][0]:events[0].start, t1=timeline.length?timeline[timeline.length-1][0]:events[events.length-1].end;
+  const big = timeline.length ? chartPNG(900,320,nightOpts('Nível de som durante o período')).toDataURL('image/png') : '';
+  let maxEv=null; for(const e of events) if(!maxEv||e.peak>maxEv.peak) maxEv=e;
+  let evHtml='';
+  for(let i=0;i<events.length;i++){
+    const ev=events[i], dur=Math.round((ev.end-ev.start)/1000);
+    const mini=chartPNG(600,150,{t0:ev.start,t1:Math.max(ev.end,ev.start+5000),series:[{pts:ev.levels,color:'#ff8a7a',w:2}],maxGap:2000}).toDataURL('image/png');
+    const au=await blobToDataURL(ev.wav);
+    evHtml+=`<div class="ev"><h3>#${i+1} — ${fmtD(ev.start)} às ${fmtT(ev.start)}</h3>
+      <p>Duração: <b>${dur} s</b> · Pico: <b>${Math.round(ev.peak)} dB</b> · Média: <b>${Math.round(ev.leq)} dB</b> · Limite: ${ev.lim} dB (${ev.night?'período noturno':'período diurno'})</p>
+      <img src="${mini}" alt="gráfico da ocorrência ${i+1}"><audio controls preload="metadata" src="${au}"></audio></div>`;
+  }
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Relatório de ruído ${esc(fmtD(t0))}</title><style>
+body{margin:0;padding:16px;background:#0b0f14;color:#e6edf3;font-family:system-ui,-apple-system,Roboto,sans-serif;max-width:900px;margin:auto;line-height:1.45}
+h1{font-size:20px;margin:4px 0}h2{font-size:17px;margin:22px 0 8px}h3{font-size:15px;margin:0 0 4px;color:#ff8a7a}
+img{width:100%;border-radius:8px;display:block}audio{width:100%;margin-top:8px}
+.box{background:#141b24;border:1px solid #223041;border-radius:12px;padding:12px;margin:10px 0}
+.ev{background:#141b24;border:1px solid #223041;border-radius:12px;padding:12px;margin:10px 0}.ev p{margin:0 0 8px;font-size:14px;color:#c7d2de}
+.n{font-size:12px;color:#8b9bb0}</style></head><body>
+<h1>🔊 Relatório de ruído</h1>
+<div class="box">Período monitorado: <b>${esc(fmtD(t0))} ${esc(fmtT(t0,false))}</b> até <b>${esc(fmtD(t1))} ${esc(fmtT(t1,false))}</b><br>
+Limites: dia <b>${cfg.limDia} dB</b> · noite <b>${cfg.limNoite} dB</b> (${esc(cfg.noiteIni)} às ${esc(cfg.noiteFim)})<br>
+Ocorrências acima do limite: <b>${events.length}</b>${maxEv?` · maior pico <b>${Math.round(maxEv.peak)} dB</b> às ${esc(fmtT(maxEv.start))}`:''}</div>
+${big?`<img src="${big}" alt="gráfico do período"><p class="n">Linha azul = nível de som (média a cada segundo; a faixa clara mostra os picos). Linha amarela tracejada = limite. Faixas vermelhas = ocorrências gravadas.</p>`:''}
+<h2>Ocorrências (toque ▶ para ouvir)</h2>${evHtml||'<p>Nenhuma ocorrência acima do limite.</p>'}
+<p class="n">Medição feita com microfone de celular, calibrada por referência de voz humana; valores aproximados, para registro. Não substitui medição com equipamento certificado (ABNT NBR 10151). Relatório gerado em ${esc(fmtD(Date.now()))} ${esc(fmtT(Date.now()))}.</p>
+</body></html>`;
+  setStatus('');
+  await shareFiles([new File([html],'relatorio-ruido-'+stamp()+'.html',{type:'text/html'})],'Relatório de ruído '+fmtD(t0));
+};
+
+$('btnPng').onclick=()=>{
+  if(!timeline.length){ setStatus('Ainda não há dados para o gráfico.'); return; }
+  const n=Math.min(events.length,14), W=1000, H=110+360+26*n+40;
+  const c=document.createElement('canvas'); c.width=W*2; c.height=H*2; const g=c.getContext('2d'); g.scale(2,2);
+  g.fillStyle='#0b0f14'; g.fillRect(0,0,W,H);
+  const t0=timeline[0][0], t1=timeline[timeline.length-1][0];
+  g.fillStyle='#e6edf3'; g.font='600 22px system-ui'; g.textBaseline='top'; g.fillText('Relatório de ruído',20,18);
+  g.font='15px system-ui'; g.fillStyle='#c7d2de';
+  g.fillText(`Período: ${fmtD(t0)} ${fmtT(t0,false)} até ${fmtD(t1)} ${fmtT(t1,false)}  ·  Limite dia ${cfg.limDia} dB / noite ${cfg.limNoite} dB`,20,52);
+  g.fillText(`Ocorrências acima do limite: ${events.length}`,20,76);
+  g.save(); g.translate(20,110); paintChart(g,W-40,360,nightOpts('')); g.restore();
+  g.font='14px system-ui'; g.fillStyle='#ff8a7a';
+  events.slice(0,n).forEach((e,i)=>g.fillText(`#${i+1}  ${fmtD(e.start)} ${fmtT(e.start)}  ·  ${Math.round((e.end-e.start)/1000)} s  ·  pico ${Math.round(e.peak)} dB  ·  média ${Math.round(e.leq)} dB`,20,486+i*26));
+  if(events.length>n){ g.fillStyle='#8b9bb0'; g.fillText(`… e mais ${events.length-n}`,20,486+n*26); }
+  c.toBlob(b=>shareFiles([new File([b],'grafico-ruido-'+stamp()+'.png',{type:'image/png'})],'Gráfico de ruído'),'image/png');
+};
+$('btnWavs').onclick=()=>{
+  if(!events.length){ setStatus('Nenhum som gravado ainda.'); return; }
+  shareFiles(events.map(ev=>new File([ev.wav],evName(ev),{type:'audio/wav'})),'Sons gravados');
+};
+$('btnClear').onclick=async()=>{
+  if(!confirm('Apagar a linha do tempo e TODAS as gravações para começar uma nova noite?')) return;
+  if(rec){ rec=null; nightAlert(false); }
+  events=[]; timeline=[]; live=[]; sessPeak=null; urls.forEach(u=>URL.revokeObjectURL(u)); urls.clear();
+  await dbOp('events','readwrite',s=>s.clear()); await saveTimeline();
+  renderEvents(); drawAll(); setStatus('');
+};
+
+/* ---------- Campos de configuração ---------- */
+const FIELDS=['limDia','limNoite','noiteIni','noiteFim','minAcima','posRoll','preRoll','maxDur'];
+function fillCfg(){
+  FIELDS.forEach(k=>$(k).value=cfg[k]); $('vibrar').checked=!!cfg.vibrar;
+  $('offTxt').textContent=(cfg.offset>=0?'+':'')+cfg.offset+' dB';
+}
+FIELDS.forEach(k=>$(k).addEventListener('change',()=>{ const v=$(k).value; cfg[k]=(k.startsWith('noite')&&k!=='limNoite')?v:(parseFloat(v)||0); saveCfg(); drawAll(); }));
+$('vibrar').onchange=()=>{cfg.vibrar=$('vibrar').checked;saveCfg()};
+$('offMinus').onclick=()=>{cfg.offset=r1(cfg.offset-1);saveCfg();fillCfg()};
+$('offPlus').onclick=()=>{cfg.offset=r1(cfg.offset+1);saveCfg();fillCfg()};
+window.addEventListener('pagehide',()=>{ if(running) saveTimeline(); });
+window.addEventListener('resize',()=>{ renderEvents(); drawAll(); });
+
+/* ---------- Início ---------- */
+(async()=>{
+  fillCfg(); updBadges();
+  await openDB();
+  const ev=await dbOp('events','readonly',s=>s.getAll()); if(Array.isArray(ev)) events=ev.sort((a,b)=>a.start-b.start);
+  const tl=await dbOp('kv','readonly',s=>s.get('timeline')); if(Array.isArray(tl)) timeline=tl;
+  renderEvents(); drawAll();
+  if(!window.isSecureContext) setStatus('⚠ Abra esta página por um endereço https:// para o microfone funcionar.');
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
